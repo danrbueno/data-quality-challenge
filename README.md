@@ -2,11 +2,11 @@
 
 Construção de um Data Product confiável de Market Share com foco em Data Quality, usando arquitetura medalhão (Bronze → Silver → Gold) em PySpark sobre Databricks.
 
-## Dados
+## 1. Dados
 
 Todos os dados são **sintéticos**, criados exclusivamente para avaliação técnica. Nenhum dado real é utilizado.
 
-## Arquitetura
+## 2. Arquitetura
 
 ```
 raw_data/ (CSVs)                    catálogo: dataquality_challenge
@@ -34,7 +34,7 @@ raw_data/ (CSVs)                    catálogo: dataquality_challenge
 | Silver | `02_silver` | Validação DQ (54 regras), tratamento automático, quarentena, UNION, cobertura, território, dados sensíveis |
 | Gold | `03_gold` | Fato enriquecida com JOINs, 7 agregações de Market Share (GroupBy + Window), métricas de cobertura, monitoramento DQ |
 
-## Estrutura do projeto
+## 3. Estrutura do projeto
 
 ```
 data-quality-challenge/
@@ -70,14 +70,14 @@ data-quality-challenge/
     └── test_data_quality.py           # testes automatizados da classe DataQuality
 ```
 
-## Dependências
+## 4. Dependências
 
 - **Databricks Runtime** 15.4+ (PySpark 3.5+, Python 3.11+)
 - **Spark Session** (disponível automaticamente em notebooks Databricks)
 - **Delta Lake** (formato padrão das tabelas no Databricks)
 - Sem dependências externas adicionais — pyspark, json e importlib são builtin
 
-## Premissas
+## 5. Premissas
 
 1. `sold_volume` representa o volume físico vendido em **unidades**.
 2. `sales_value_brl` é o valor de venda em **reais (R$)**.
@@ -90,7 +90,7 @@ data-quality-challenge/
 9. Tratamento automático só é aplicado quando `safe_auto_fix = true` e a regra **falhou** (percent > max_percent).
 10. Regras que passaram com `0 < percent ≤ max_percent` vão para **quarentena** (registros problemáticos removidos da silver).
 
-## Instruções de execução
+## 6. Instruções de execução
 
 Executar os notebooks em ordem, no Databricks workspace:
 
@@ -102,7 +102,7 @@ Cada notebook é **idempotente** (usa `CREATE OR REPLACE TABLE`), podendo ser re
 
 ---
 
-## Data Quality
+## 7. Data Quality
 
 ### Classe DataQuality
 
@@ -133,7 +133,7 @@ Arquivo: `utils/data_quality.py`. Construtor: `DataQuality(catalog, schema, tabl
 | `max_percent` | Limite máximo de falhas aceitável (1% para todas) |
 | `safe_auto_fix` | true se existe correção automática segura; false caso contrário |
 
-### Classificação dos resultados (Seção 6)
+### Classificação dos resultados
 
 | Classificação | Condição | Ação |
 |---|---|---|
@@ -142,7 +142,7 @@ Arquivo: `utils/data_quality.py`. Construtor: `DataQuality(catalog, schema, tabl
 | **Aprovado com alerta** | 0 < percent ≤ max_percent | Registrado para monitoramento, dado permanece |
 | **Quarentena** | FAIL + safe_auto_fix = false | Registros problemáticos removidos da silver para revisão manual |
 
-### Cobertura das dimensões DQ (Seção 5)
+### Cobertura das dimensões DQ
 
 | Dimensão | Status | Como é coberta |
 |---|---|---|
@@ -188,7 +188,7 @@ Todas as tabelas silver incluem colunas de auditoria:
 
 ---
 
-## Resultados
+## 8. Resultados
 
 ### Validação DQ na Bronze
 
@@ -244,7 +244,7 @@ Todas as tabelas silver incluem colunas de auditoria:
 
 ---
 
-## Fórmula de Market Share
+## 9. Fórmula de Market Share
 
 ```
 Market Share (%) = sales_value_brl(item, semana) / total_sales_value_brl(semana) × 100
@@ -258,7 +258,7 @@ Market Share (%) = sales_value_brl(item, semana) / total_sales_value_brl(semana)
 
 ---
 
-## Respostas às questões do enunciado (Seção 8)
+## 10. Respostas às questões
 
 ### 1. Quais foram os principais problemas e como foram priorizados?
 
@@ -341,7 +341,7 @@ A tabela `gold.coverage_metrics` quantifica a taxa de cobertura por provider × 
 
 ---
 
-## Arquitetura de operação e monitoramento (Seção 7 e 9)
+## 11. Arquitetura de operação e monitoramento
 
 ### Proposta de monitoramento
 
@@ -377,7 +377,7 @@ Alertas (SQL Alerts sobre gold.dq_monitoring):
 
 ---
 
-## Estratégia para dados sensíveis (Seção 10)
+## 12. Estratégia para dados sensíveis
 
 A tabela `sensitive_store_contacts` contém nome, email e telefone de contatos. Tratamento aplicado na silver:
 
@@ -392,7 +392,7 @@ A tabela `sensitive_store_contacts` contém nome, email e telefone de contatos. 
 
 ---
 
-## Evidências técnicas (Seção 9)
+## 13. Evidências técnicas
 
 | Requisito | Onde | Evidência |
 |---|---|---|
@@ -409,7 +409,7 @@ A tabela `sensitive_store_contacts` contém nome, email e telefone de contatos. 
 
 ---
 
-## Bibliotecas e frameworks adicionais (Seção 10)
+## 14. Bibliotecas e frameworks adicionais
 
 | Biblioteca / Framework | Justificativa |
 |---|---|
@@ -419,7 +419,7 @@ A tabela `sensitive_store_contacts` contém nome, email e telefone de contatos. 
 
 ---
 
-## 5 Insights relevantes (Seção 10)
+## 15. Insights relevantes
 
 Os insights abaixo são sustentados por dados aprovados (camada gold) e estão implementados no notebook `03_gold`:
 
@@ -435,7 +435,7 @@ Os insights abaixo são sustentados por dados aprovados (camada gold) e estão i
 
 ---
 
-## Visualização de dados (Seção 10)
+## 16. Visualização de dados
 
 ### Dashboard Lakeview
 
@@ -458,6 +458,13 @@ As visualizações são geradas pelo notebook `04_dashboards` usando PySpark (co
 
 ---
 
-## Limitações e riscos
+## 17. Limitações e riscos
 
-Ver Seção 8, questão 8 acima.
+1. **Acurácia não validada:** Não há fonte de verdade externa para comparar os valores de `sales_value_brl`. Market Share pode estar correto internamente mas não refletir o mercado real.
+2. **Temporalidade não monitorada:** As datas de entrega em `coverage_provider` não são usadas como regra DQ. Atrasos na entrega não geram alertas automáticos.
+3. **Reconciliação entre providers não implementada:** Para semanas onde ambos os providers reportam o mesmo produto/loja, não há cruzamento para detectar discrepâncias.
+4. **Coordenadas geográficas removidas:** A validação de coordenadas foi removida a pedido. Registros com latitude/longitude invertidas permanecem na silver.
+5. **Market Share sem ponderação de cobertura:** O cálculo atual não pondera pela taxa de cobertura. Semanas com baixa cobertura podem distorcer o Market Share.
+6. **Dados sensíveis mascarados mas não governanceados:** O mascaramento é determinístico, mas não há controle de acesso baseado em coluna (column masking do Unity Catalog).
+7. **Sem processamento incremental:** A pipeline é batch (`CREATE OR REPLACE TABLE`). Para volumes maiores, processamento incremental com Auto Loader seria necessário.
+8. **Sem alertas automatizados:** A tabela `dq_monitoring` existe mas não dispara alertas. Recomenda-se configurar SQL Alerts ou Databricks SQL Alerts.
