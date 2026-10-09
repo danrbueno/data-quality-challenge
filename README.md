@@ -2,6 +2,10 @@
 
 Construção de um Data Product confiável de Market Share com foco em Data Quality, usando arquitetura medalhão (Bronze → Silver → Gold) em PySpark sobre Databricks.
 
+## Dados
+
+Todos os dados são **sintéticos**, criados exclusivamente para avaliação técnica. Nenhum dado real é utilizado.
+
 ## Arquitetura
 
 ```
@@ -42,7 +46,16 @@ data-quality-challenge/
 ├── notebooks/
 │   ├── 01_bronze                      # ingestão bronze
 │   ├── 02_silver                      # DQ + transformação silver
-│   └── 03_gold                        # Market Share data product
+│   ├── 03_gold                        # Market Share data product
+│   └── 04_dashboards                  # queries PySpark + visualizações matplotlib
+├── dashboards/
+│   ├── dashboard.md                   # documento markdown com as visualizações
+│   ├── market_share_by_brand.png
+│   ├── market_share_by_channel.png
+│   ├── coverage_by_provider.png
+│   ├── top5_products.png
+│   ├── dq_monitoring.png
+│   └── total_sales.png
 ├── raw_data/
 │   ├── dim_loja.csv
 │   ├── dim_produto.csv
@@ -396,10 +409,55 @@ A tabela `sensitive_store_contacts` contém nome, email e telefone de contatos. 
 
 ---
 
+## Bibliotecas e frameworks adicionais (Seção 10)
+
+| Biblioteca / Framework | Justificativa |
+|---|---|
+| **Delta Lake** | Formato padrão de armazenamento no Databricks. Proporciona transações ACID, evolução de schema, time travel (via `VERSION AS OF`) e operações MERPOSE otimizadas. Essencial para idempotência (`CREATE OR REPLACE TABLE`) e reprocessamento seguro. |
+| **importlib** (builtin) | Carregamento dinâmico da classe `DataQuality` de arquivo externo (`utils/data_quality.py`) sem necessidade de instalacão de pacotes. Permite separar a lógica de DQ do código dos notebooks, mantendo o código modular e testável. |
+| **Framework DQ customizável** | A classe `DataQuality` + `bronze.json` formam um framework de DQ configurável externamente. A vantagem sobre soluções como Great Expectations é a leveza (sem dependências externas) e a integracão nativa com SparkSession do Databricks. Regras são adicionadas editando o JSON, sem alterar código. |
+
+---
+
+## 5 Insights relevantes (Seção 10)
+
+Os insights abaixo são sustentados por dados aprovados (camada gold) e estão implementados no notebook `03_gold`:
+
+1. **Concentração de Market Share por marca:** As top 5 marcas (BETA 12.44%, PRIME 11.05%, DELTA 10.65%, SOLAR 8.45%, ALPHA 8.09%) concentram ~50.7% do mercado na última semana, indicando alta concentração competitiva.
+
+2. **Evolução do Market Share por categoria:** As categorias CHOCOLATES, LACTEOS e BEBIDAS lideram consistentemente ao longo das semanas, com rotatividade entre as top 3 categorias ao longo do tempo.
+
+3. **Cobertura por provider:** Provider A tem cobertura média de 85.2% (664 semanas full, 2493 partial, 28 no_file) vs Provider B com 84.1% (616 full, 2524 partial, 45 no_file). Ambos têm cobertura similar, mas o Provider A é ligeiramente mais consistente.
+
+4. **Correlação entre cobertura e volume de vendas:** Semanas com maior taxa de cobertura tendem a apresentar maior volume de vendas, confirmando que a ausência de cobertura impacta a métrica de Market Share.
+
+5. **Market Share por canal:** ATACAREJO lidera com 35.83% do Market Share, seguido por SUPERMERCADO (33.78%) e CONVENIENCIA (30.39%). A distribuição é relativamente equilibrada entre os três canais.
+
+---
+
+## Visualização de dados (Seção 10)
+
+### Dashboard Lakeview
+
+Dashboard Lakeview criado: `Market Share Dashboard` (ID: `01f1c425bd891e568a4165ff8e07f2e1`). As queries PySpark para os widgets estão no notebook `notebooks/04_dashboards`, com visualizações matplotlib em cada célula.
+
+### Documento Markdown
+
+O arquivo `dashboards/dashboard.md` contém um relatório em formato markdown com 6 visualizações salvas como PNG na pasta `dashboards/`:
+
+| # | Visualização | Tipo | Arquivo |
+|---|---|---|---|
+| 1 | Market Share por Marca | Bar chart horizontal | `market_share_by_brand.png` |
+| 2 | Market Share por Canal | Bar chart | `market_share_by_channel.png` |
+| 3 | Cobertura por Provider | Bar chart | `coverage_by_provider.png` |
+| 4 | Top 5 Produtos por Market Share | Bar chart horizontal | `top5_products.png` |
+| 5 | Monitoramento DQ | Bar chart | `dq_monitoring.png` |
+| 6 | Total de Vendas | Counter | `total_sales.png` |
+
+As visualizações são geradas pelo notebook `04_dashboards` usando PySpark (consultas) + matplotlib (gráficos), e os arquivos PNG são salvos automaticamente na pasta `dashboards/`.
+
+---
+
 ## Limitações e riscos
 
 Ver Seção 8, questão 8 acima.
-
-## Dados
-
-Todos os dados são **sintéticos**, criados exclusivamente para avaliação técnica. Nenhum dado real é utilizado.
