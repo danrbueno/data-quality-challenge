@@ -1,0 +1,80 @@
+[
+  {
+    "table": "dim_calendario",
+    "columns": [
+      {"name": "year_week", "rules": [{"id": "DQ001", "description": "Verifica se existem strings vazias na coluna year_week", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "week_start_date", "rules": [{"id": "DQ002", "description": "Verifica se week_start_date e maior que week_end_date", "severity": "medium", "type": "date_range", "end_column": "week_end_date", "max_percent": 1, "safe_auto_fix": false}]}
+    ]
+  },
+  {
+    "table": "dim_loja",
+    "columns": [
+      {"name": "active_flag", "rules": [{"id": "DQ003", "description": "Verifica se active_flag contem apenas valores Y ou N", "severity": "medium", "type": "domain", "expected_values": ["Y", "N"], "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "channel", "rules": [{"id": "DQ004", "description": "Verifica se existem strings vazias na coluna channel", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "city", "rules": [{"id": "DQ005", "description": "Verifica se existem strings vazias na coluna city", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "cnpj", "rules": [{"id": "DQ006", "description": "Verifica se existem CNPJs duplicados", "severity": "high", "type": "duplicates", "max_percent": 1, "safe_auto_fix": true}, {"id": "DQ007", "description": "Verifica se existem strings vazias na coluna cnpj", "severity": "medium", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "retailer_name", "rules": [{"id": "DQ008", "description": "Verifica se existem strings vazias na coluna retailer_name", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "seller_id", "rules": [{"id": "DQ009", "description": "Verifica se existem valores nulos na coluna seller_id", "severity": "high", "type": "nulls", "max_percent": 1, "safe_auto_fix": true}]},
+      {"name": "state", "rules": [{"id": "DQ010", "description": "Verifica se existem valores nulos na coluna state", "severity": "high", "type": "nulls", "max_percent": 1, "safe_auto_fix": false}, {"id": "DQ011", "description": "Verifica se existem strings vazias na coluna state", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "store_id", "rules": [{"id": "DQ012", "description": "Verifica se existem strings vazias na coluna store_id", "severity": "critical", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "store_name", "rules": [{"id": "DQ013", "description": "Verifica se existem strings vazias na coluna store_name", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "territory_id", "rules": [{"id": "DQ014", "description": "Verifica se existem valores nulos na coluna territory_id", "severity": "medium", "type": "nulls", "max_percent": 1, "safe_auto_fix": true}]}
+    ]
+  },
+  {
+    "table": "dim_produto",
+    "columns": [
+      {"name": "brand", "rules": [{"id": "DQ015", "description": "Verifica se existem strings vazias na coluna brand", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "category", "rules": [{"id": "DQ016", "description": "Verifica se existem valores nulos na coluna category", "severity": "medium", "type": "nulls", "max_percent": 1, "safe_auto_fix": false}, {"id": "DQ017", "description": "Verifica se existem strings vazias na coluna category", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "ean", "rules": [{"id": "DQ018", "description": "Verifica se existem EANs duplicados", "severity": "critical", "type": "duplicates", "max_percent": 1, "safe_auto_fix": true}, {"id": "DQ019", "description": "Verifica se existem strings vazias na coluna ean", "severity": "high", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "is_own_product", "rules": [{"id": "DQ020", "description": "Verifica se is_own_product contem apenas valores Y ou N", "severity": "medium", "type": "domain", "expected_values": ["Y", "N"], "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "product_description", "rules": [{"id": "DQ021", "description": "Verifica se existem strings vazias na coluna product_description", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "product_id", "rules": [{"id": "DQ022", "description": "Verifica se existem strings vazias na coluna product_id", "severity": "critical", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "source_system", "rules": [{"id": "DQ023", "description": "Verifica se existem strings vazias na coluna source_system", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "valid_from", "rules": [{"id": "DQ024", "description": "Verifica se valid_from e maior que valid_to", "severity": "medium", "type": "date_range", "end_column": "valid_to", "max_percent": 1, "safe_auto_fix": false}]}
+    ]
+  },
+  {
+    "table": "fact_market_share_provider_a",
+    "columns": [
+      {"name": "ean", "rules": [{"id": "DQ025", "description": "Verifica integridade referencial entre ean e dim_produto", "severity": "critical", "type": "referential_integrity", "ref_table": "dim_produto", "ref_column": "ean", "max_percent": 1, "safe_auto_fix": false}, {"id": "DQ026", "description": "Verifica se existem strings vazias na coluna ean", "severity": "high", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "sales_value", "rules": [{"id": "DQ027", "description": "Verifica se existem valores negativos na coluna sales_value", "severity": "high", "type": "negatives", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "sales_value_brl", "rules": [{"id": "DQ028", "description": "Verifica se existem valores negativos na coluna sales_value_brl", "severity": "high", "type": "negatives", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "source_file", "rules": [{"id": "DQ029", "description": "Verifica se existem strings vazias na coluna source_file", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "store_id", "rules": [{"id": "DQ030", "description": "Verifica integridade referencial entre store_id e dim_loja", "severity": "critical", "type": "referential_integrity", "ref_table": "dim_loja", "ref_column": "store_id", "max_percent": 1, "safe_auto_fix": false}, {"id": "DQ031", "description": "Verifica se existem strings vazias na coluna store_id", "severity": "high", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "week", "rules": [{"id": "DQ032", "description": "Verifica se existem chaves compostas duplicadas (week + store_id + ean)", "severity": "high", "type": "duplicates", "composite_key": ["week", "store_id", "ean"], "max_percent": 1, "safe_auto_fix": true}, {"id": "DQ033", "description": "Verifica se existem strings vazias na coluna week", "severity": "medium", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]}
+    ]
+  },
+  {
+    "table": "fact_market_share_provider_b",
+    "columns": [
+      {"name": "competitor_flag", "rules": [{"id": "DQ034", "description": "Verifica se competitor_flag contem apenas valores validos", "severity": "medium", "type": "domain", "expected_values": ["S", "N", "Sim", "Não", "True", "False", "true", "false", "1", "0", "Y", "n"], "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "customer_code", "rules": [{"id": "DQ035", "description": "Verifica integridade referencial entre customer_code e dim_loja", "severity": "critical", "type": "referential_integrity", "ref_table": "dim_loja", "ref_column": "store_id", "max_percent": 1, "safe_auto_fix": false}, {"id": "DQ036", "description": "Verifica se existem strings vazias na coluna customer_code", "severity": "high", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "market", "rules": [{"id": "DQ037", "description": "Verifica se existem strings vazias na coluna market", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "product_ean", "rules": [{"id": "DQ038", "description": "Verifica integridade referencial entre product_ean e dim_produto", "severity": "critical", "type": "referential_integrity", "ref_table": "dim_produto", "ref_column": "ean", "max_percent": 1, "safe_auto_fix": false}, {"id": "DQ039", "description": "Verifica se existem strings vazias na coluna product_ean", "severity": "high", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "reference_week", "rules": [{"id": "DQ040", "description": "Verifica se existem chaves compostas duplicadas (reference_week + customer_code + product_ean)", "severity": "high", "type": "duplicates", "composite_key": ["reference_week", "customer_code", "product_ean"], "max_percent": 1, "safe_auto_fix": true}, {"id": "DQ041", "description": "Verifica se existem strings vazias na coluna reference_week", "severity": "medium", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "revenue", "rules": [{"id": "DQ042", "description": "Verifica se existem valores negativos na coluna revenue", "severity": "high", "type": "negatives", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "sales_value_brl", "rules": [{"id": "DQ043", "description": "Verifica se existem valores negativos na coluna sales_value_brl", "severity": "high", "type": "negatives", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "source_file", "rules": [{"id": "DQ044", "description": "Verifica se existem strings vazias na coluna source_file", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]}
+    ]
+  },
+  {
+    "table": "coverage_provider",
+    "columns": [
+      {"name": "year_week", "rules": [{"id": "DQ045", "description": "Verifica se existem strings vazias na coluna year_week", "severity": "medium", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "retailer_name", "rules": [{"id": "DQ046", "description": "Verifica se existem strings vazias na coluna retailer_name", "severity": "low", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "file_received", "rules": [{"id": "DQ047", "description": "Verifica se file_received contem apenas valores Y ou N", "severity": "medium", "type": "domain", "expected_values": ["Y", "N"], "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "expected_stores", "rules": [{"id": "DQ048", "description": "Verifica se existem valores negativos na coluna expected_stores", "severity": "high", "type": "negatives", "max_percent": 1, "safe_auto_fix": false}]},
+      {"name": "received_stores", "rules": [{"id": "DQ049", "description": "Verifica se existem valores negativos na coluna received_stores", "severity": "high", "type": "negatives", "max_percent": 1, "safe_auto_fix": false}]}
+    ]
+  },
+  {
+    "table": "customer_territory_history",
+    "columns": [
+      {"name": "store_id", "rules": [{"id": "DQ051", "description": "Verifica se existem strings vazias na coluna store_id", "severity": "critical", "type": "empty_string", "max_percent": 1, "safe_auto_fix": false}, {"id": "DQ055", "description": "Verifica se existem chaves compostas duplicadas (store_id + category + valid_from)", "severity": "high", "type": "duplicates", "composite_key": ["store_id", "category", "valid_from"], "max_percent": 1, "safe_auto_fix": true}]},
+      {"name": "territory_id", "rules": [{"id": "DQ052", "description": "Verifica se existem valores nulos na coluna territory_id", "severity": "high", "type": "nulls", "max_percent": 1, "safe_auto_fix": true}]},
+      {"name": "seller_id", "rules": [{"id": "DQ053", "description": "Verifica se existem valores nulos na coluna seller_id", "severity": "high", "type": "nulls", "max_percent": 1, "safe_auto_fix": true}]},
+      {"name": "valid_from", "rules": [{"id": "DQ054", "description": "Verifica se valid_from e maior que valid_to", "severity": "medium", "type": "date_range", "end_column": "valid_to", "max_percent": 1, "safe_auto_fix": false}]}
+    ]
+  }
+]
