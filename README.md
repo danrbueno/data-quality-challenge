@@ -98,7 +98,7 @@ Executar os notebooks em ordem, no Databricks workspace:
 2. **`02_silver`** — executa validação DQ, tratamento, quarentena e UNION; persiste `silver.dq_results`
 3. **`03_gold`** — cria fato enriquecida, 7 agregações de Market Share, métricas de cobertura e monitoramento DQ
 
-Cada notebook é **idempotente** (usa `CREATE OR REPLACE TABLE`), podendo ser reexecuído sem efeitos colaterais.
+Cada notebook é **idempotente** (usa `CREATE OR REPLACE TABLE`), podendo ser executado várias vezes sem efeitos colaterais.
 
 ---
 
