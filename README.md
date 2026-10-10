@@ -1,4 +1,4 @@
-# Data Quality Challenge — Market Share Data Product
+# Data Quality Challenge — Market Share Data Product ---
 
 Construção de um Data Product confiável de Market Share com foco em Data Quality, usando arquitetura medalhão (Bronze → Silver → Gold) em PySpark sobre Databricks.
 
