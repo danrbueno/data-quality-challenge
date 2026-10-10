@@ -130,7 +130,6 @@ data-quality-challenge/
 │   ├── 02_silver
 │   ├── 03_gold
 │   ├── 04_dashboards
-│   └── manifest.mf
 ├── dashboards/
 │   ├── dashboard.md                   # documento markdown com as visualizações
 │   ├── market_share_by_brand.png
