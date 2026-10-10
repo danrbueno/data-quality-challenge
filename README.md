@@ -381,14 +381,63 @@ flowchart TD
   class G_ENR,G_PROD,G_BRAND,G_CAT,G_STORE,G_RET,G_TERR,G_CHAN,G_COV,G_DQ gold
 ```
 
-**Principais fluxos de lineage:**
+**Transformações a nível de coluna — Bronze → Silver:**
 
-| Origem (Silver) | Destino (Gold) | Transformação |
-|---|---|---|
-| `fact_consolidated` + dims | `fact_market_share_enriched` | `INNER JOIN` fato × dims × coverage |
-| `fact_market_share_enriched` | `market_share_by_*` (7 tabelas) | `GROUP BY` + `Window Function` |
-| `coverage_provider` | `coverage_metrics` | Agregação `AVG(coverage_pct)` por provider × semana × rede |
-| `dq_results` | `dq_monitoring` | Agregação `COUNT` + `AVG` por classification × severity |
+| Tabela bronze | Coluna(s) bronze | Transformação | Coluna(s) silver |
+|---|---|---|---|
+| `dim_loja` | `territory_id` | `COALESCE(territory_id, 'UNKNOWN')` | `territory_id` |
+| `dim_loja` | `seller_id` | `COALESCE(seller_id, 'UNKNOWN')` | `seller_id` |
+| `dim_loja` | `state IS NULL` | `WHERE state IS NULL` → quarentena | removido da silver |
+| `dim_produto` | `ean` (duplicado) | `ROW_NUMBER() OVER (PARTITION BY ean ORDER BY product_id)` → manter `_rn = 1` | `ean` (deduplicado) |
+| `dim_produto` | `category IS NULL` | `WHERE category IS NULL` → quarentena | removido da silver |
+| `fact_ms_provider_a` | `sales_value < 0` | `WHERE sales_value < 0` → quarentena | removido da silver |
+| `fact_ms_provider_a` | `store_id` / `ean` | `LEFT JOIN dim_loja / dim_produto` → órfãos para quarentena | apenas registros com RI válida |
+| `fact_ms_provider_a` | `week + store_id + ean` | `ROW_NUMBER() OVER (PARTITION BY ...)` → manter mais recente | deduplicado |
+| `fact_ms_provider_b` | `reference_week + customer_code + product_ean` | Mesma lógica do provider A | deduplicado |
+| `customer_territory_history` | `territory_id` | `COALESCE(territory_id, 'UNKNOWN')` | `territory_id` |
+| `customer_territory_history` | `seller_id` | `COALESCE(seller_id, 'UNKNOWN')` | `seller_id` |
+| `sensitive_store_contacts` | `contact_email` | Mascaramento parcial: `co***@***` | `contact_email` |
+| `sensitive_store_contacts` | `contact_phone` | Mascaramento parcial: `***0001` | `contact_phone` |
+| Todas as tabelas | — | Adiciona `_dq_action`, `_processed_at` | colunas de auditoria |
+
+**Transformações a nível de coluna — Silver → `fact_market_share_consolidated` (UNION ALL):**
+
+| Coluna silver (Provider A) | Coluna silver (Provider B) | Coluna consolidada | Transformação |
+|---|---|---|---|
+| `week` | `reference_week` | `year_week` | Renomeação para schema padronizado |
+| `store_id` | `customer_code` | `store_id` | Renomeação |
+| `ean` | `product_ean` | `ean` | Renomeação |
+| `sales_value_brl` | `sales_value_brl` | `sales_value_brl` | Direto |
+| `sold_volume` | `sold_volume` | `sold_volume` | Direto |
+| `'A'` (literal) | `'B'` (literal) | `provider` | Identifica a origem |
+| `source_file` | `source_file` | `source_file` | Direto |
+| `ingestion_timestamp` | `load_date` | `ingestion_timestamp` | Renomeação |
+| `'provider_a'` (literal) | `'provider_b'` (literal) | `source_table` | Identifica a tabela de origem |
+
+**Transformações a nível de coluna — Silver → Gold (`fact_market_share_enriched`):**
+
+| Coluna(s) origem | JOIN | Coluna(s) gold | Transformação |
+|---|---|---|---|
+| `fact_market_share_consolidated` | — | `year_week, store_id, ean, sales_value_brl, sold_volume, provider, source_table` | SELECT direto |
+| `dim_loja` | `INNER JOIN ON store_id` | `retailer_name, channel, state, territory_id, city` | Enriquecimento dimensional |
+| `dim_produto` | `INNER JOIN ON ean` | `brand, category, manufacturer, product_description` | Enriquecimento dimensional |
+| `dim_calendario` | `LEFT JOIN ON year_week` | `year, month, week` | Enriquecimento temporal |
+| `coverage_provider` | `LEFT JOIN ON provider + year_week + retailer_name` | `expected_stores, received_stores` | Métricas de cobertura |
+| `coverage_provider` | `CASE WHEN file_received = 'N' THEN 'no_coverage'` / `received < expected THEN 'partial_coverage'` / `ELSE 'full_coverage'` | `coverage_status` | Coluna derivada |
+
+**Transformações a nível de coluna — Gold (`fact_market_share_enriched` → agregações):**
+
+| Tabela gold | GROUP BY | Colunas agregadas | Coluna calculada |
+|---|---|---|---|
+| `market_share_by_product` | `year_week, ean, product_description, brand, category` | `SUM(sales_value_brl) AS total_sales_brl`, `SUM(sold_volume) AS total_volume` | `ROUND(SUM(sales_value_brl) / SUM(SUM(sales_value_brl)) OVER (PARTITION BY year_week) * 100, 2) AS market_share_pct` |
+| `market_share_by_brand` | `year_week, brand` | `SUM(sales_value_brl)`, `SUM(sold_volume)` | `market_share_pct` (mesma fórmula) |
+| `market_share_by_category` | `year_week, category` | `SUM(sales_value_brl)`, `SUM(sold_volume)` | `market_share_pct` (mesma fórmula) |
+| `market_share_by_store` | `year_week, store_id, retailer_name, city, state, channel` | `SUM(sales_value_brl)`, `SUM(sold_volume)` | `market_share_pct` (mesma fórmula) |
+| `market_share_by_retailer` | `year_week, retailer_name` | `SUM(sales_value_brl)`, `SUM(sold_volume)` | `market_share_pct` (mesma fórmula) |
+| `market_share_by_territory` | `year_week, territory_id` | `SUM(sales_value_brl)`, `SUM(sold_volume)` | `market_share_pct` (mesma fórmula) |
+| `market_share_by_channel` | `year_week, channel` | `SUM(sales_value_brl)`, `SUM(sold_volume)` | `market_share_pct` (mesma fórmula) |
+| `coverage_metrics` | `provider, year_week, retailer_name` | `AVG(coverage_pct)` | Agregação de cobertura |
+| `dq_monitoring` | `classification, severity` | `COUNT(*) AS rule_count`, `SUM(fail_count) AS total_failures`, `AVG(percent) AS avg_percent` | Agregação DQ |
 
 ### Top 5 produtos por Market Share (semana 2026-40)
 
