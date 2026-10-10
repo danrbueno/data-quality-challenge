@@ -309,6 +309,87 @@ Todas as tabelas silver incluem colunas de auditoria:
 | coverage_metrics | 6.370 |
 | dq_monitoring | 4 |
 
+### Lineage dos dados
+
+```mermaid
+flowchart TD
+  %% Bronze
+  B_DIM_LOJA["bronze.dim_loja"]
+  B_DIM_PROD["bronze.dim_produto"]
+  B_DIM_CAL["bronze.dim_calendario"]
+  B_FACT_A["bronze.fact_ms_provider_a"]
+  B_FACT_B["bronze.fact_ms_provider_b"]
+  B_COV["bronze.coverage_provider"]
+  B_TERR["bronze.territory_history"]
+  B_SENS["bronze.sensitive_contacts"]
+
+  %% Silver
+  S_DIM_LOJA["silver.dim_loja"]
+  S_DIM_PROD["silver.dim_produto"]
+  S_DIM_CAL["silver.dim_calendario"]
+  S_FACT_A["silver.fact_ms_a"]
+  S_FACT_B["silver.fact_ms_b"]
+  S_CONS["silver.fact_consolidated"]
+  S_COV["silver.coverage_provider"]
+  S_DQ["silver.dq_results"]
+
+  %% Gold
+  G_ENR["gold.fact_market_share_enriched"]
+  G_PROD["gold.market_share_by_product"]
+  G_BRAND["gold.market_share_by_brand"]
+  G_CAT["gold.market_share_by_category"]
+  G_STORE["gold.market_share_by_store"]
+  G_RET["gold.market_share_by_retailer"]
+  G_TERR["gold.market_share_by_territory"]
+  G_CHAN["gold.market_share_by_channel"]
+  G_COV["gold.coverage_metrics"]
+  G_DQ["gold.dq_monitoring"]
+
+  %% Bronze -> Silver
+  B_DIM_LOJA --> S_DIM_LOJA
+  B_DIM_PROD --> S_DIM_PROD
+  B_DIM_CAL --> S_DIM_CAL
+  B_FACT_A --> S_FACT_A
+  B_FACT_B --> S_FACT_B
+  B_COV --> S_COV
+  S_FACT_A --> S_CONS
+  S_FACT_B --> S_CONS
+
+  %% Silver -> Gold
+  S_CONS --> G_ENR
+  S_DIM_LOJA --> G_ENR
+  S_DIM_PROD --> G_ENR
+  S_DIM_CAL --> G_ENR
+  S_COV --> G_ENR
+
+  G_ENR --> G_PROD
+  G_ENR --> G_BRAND
+  G_ENR --> G_CAT
+  G_ENR --> G_STORE
+  G_ENR --> G_RET
+  G_ENR --> G_TERR
+  G_ENR --> G_CHAN
+  S_COV --> G_COV
+  S_DQ --> G_DQ
+
+  %% Styling
+  classDef bronze fill:#CD7F32,stroke:#333,color:#fff
+  classDef silver fill:#C0C0C0,stroke:#333,color:#000
+  classDef gold fill:#FFD700,stroke:#333,color:#000
+  class B_DIM_LOJA,B_DIM_PROD,B_DIM_CAL,B_FACT_A,B_FACT_B,B_COV,B_TERR,B_SENS bronze
+  class S_DIM_LOJA,S_DIM_PROD,S_DIM_CAL,S_FACT_A,S_FACT_B,S_CONS,S_COV,S_DQ silver
+  class G_ENR,G_PROD,G_BRAND,G_CAT,G_STORE,G_RET,G_TERR,G_CHAN,G_COV,G_DQ gold
+```
+
+**Principais fluxos de lineage:**
+
+| Origem (Silver) | Destino (Gold) | Transformação |
+|---|---|---|
+| `fact_consolidated` + dims | `fact_market_share_enriched` | `INNER JOIN` fato × dims × coverage |
+| `fact_market_share_enriched` | `market_share_by_*` (7 tabelas) | `GROUP BY` + `Window Function` |
+| `coverage_provider` | `coverage_metrics` | Agregação `AVG(coverage_pct)` por provider × semana × rede |
+| `dq_results` | `dq_monitoring` | Agregação `COUNT` + `AVG` por classification × severity |
+
 ### Top 5 produtos por Market Share (semana 2026-40)
 
 | Produto | Marca | Categoria | Vendas (R$) | Market Share % |
