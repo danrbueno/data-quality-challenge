@@ -6,33 +6,110 @@ Construção de um Data Product confiável de Market Share com foco em Data Qual
 
 Todos os dados são **sintéticos**, criados exclusivamente para avaliação técnica. Nenhum dado real é utilizado.
 
-## 2. Arquitetura
+## 2. Arquitetura (Databricks)
 
+Arquitetura do Data Product implementada no **Databricks** com padrão medalhão (**Bronze → Silver → Gold**), usando **PySpark + Delta Lake** e **Unity Catalog** (`dataquality_challenge`).
+
+```mermaid
+flowchart LR
+  %% =========================
+  %% DATA QUALITY CHALLENGE
+  %% ARQUITETURA NO DATABRICKS
+  %% =========================
+
+  subgraph DBX["Databricks Workspace<br/>(Spark + Delta Lake + Unity Catalog + Jobs + SQL Alerts)"]
+    direction LR
+
+    subgraph SRC["Fontes (raw_data/*.csv)"]
+      direction TB
+      s1["dim_loja.csv"]
+      s2["dim_produto.csv"]
+      s3["dim_calendario.csv"]
+      s4["fact_market_share_provider_a.csv"]
+      s5["fact_market_share_provider_b.csv"]
+      s6["coverage_provider.csv"]
+      s7["customer_territory_history.csv"]
+      s8["sensitive_store_contacts.csv"]
+    end
+
+    subgraph BRZ["Bronze — dataquality_challenge.bronze"]
+      direction TB
+      b1["bronze.dim_loja"]
+      b2["bronze.dim_produto"]
+      b3["bronze.dim_calendario"]
+      b4["bronze.fact_ms_provider_a"]
+      b5["bronze.fact_ms_provider_b"]
+      b6["bronze.coverage_provider"]
+      b7["bronze.territory_history"]
+      b8["bronze.sensitive_contacts"]
+    end
+
+    subgraph SLV["Silver — dataquality_challenge.silver"]
+      direction TB
+      sl0["DQ Engine (54 regras)<br/>dq_rules/bronze.json"]
+      sl1["silver.dim_loja"]
+      sl2["silver.dim_produto"]
+      sl3["silver.dim_calendario"]
+      sl4["silver.fact_ms_a"]
+      sl5["silver.fact_ms_b"]
+      sl6["silver.fact_consolidated<br/>(UNION ALL + source_table)"]
+      sl7["silver.coverage_provider"]
+      sl8["silver.territory_history"]
+      sl9["silver.sensitive_contacts_masked"]
+      sl10["silver.dq_results"]
+    end
+
+    subgraph QRT["Quarantine — dataquality_challenge.quarantine"]
+      direction TB
+      q1["quarantine.dim_loja_issues"]
+      q2["quarantine.dim_produto_issues"]
+      q3["quarantine.fact_ms_a_issues"]
+      q4["quarantine.fact_ms_b_issues"]
+      q5["..._issues (_quarantine_reason, _quarantined_at)"]
+    end
+
+    subgraph GLD["Gold — dataquality_challenge.gold"]
+      direction TB
+      g1["gold.fact_market_share_enriched"]
+      g2["gold.market_share_by_product"]
+      g3["gold.market_share_by_brand"]
+      g4["gold.market_share_by_category"]
+      g5["gold.market_share_by_store"]
+      g6["gold.market_share_by_retailer"]
+      g7["gold.market_share_by_territory"]
+      g8["gold.market_share_by_channel"]
+      g9["gold.coverage_metrics"]
+      g10["gold.dq_monitoring"]
+    end
+
+    subgraph CNS["Consumo & Observabilidade"]
+      direction TB
+      c1["notebooks/04_dashboards<br/>(PySpark + matplotlib)"]
+      c2["Lakeview Dashboard"]
+      c3["SQL Alerts<br/>(FAIL DQ, coverage baixa, quarentena alta)"]
+    end
+  end
+
+  SRC -->|"Notebook 01_bronze<br/>ingestão CSV → Delta"| BRZ
+  BRZ -->|"Notebook 02_silver<br/>DQ + auto-fix + quarentena + transformação"| SLV
+  BRZ -.->|"registros inválidos"| QRT
+  SLV -->|"fatos limpos + dimensões válidas + cobertura"| GLD
+  GLD -->|"Notebook 03_gold<br/>enriquecimento + agregações Market Share"| CNS
+
+  %% Orquestração
+  j1["Databricks Job: 01_bronze"] --> j2["Databricks Job: 02_silver"]
+  j2 --> j3["Databricks Job: 03_gold"]
+  j3 --> j4["(Opcional) 04_dashboards"]
 ```
-raw_data/ (CSVs)                    catálogo: dataquality_challenge
-┌──────────────────┐    ┌──────────────────────────────────────────┐    ┌─────────────────────────┐
-│ 8 arquivos CSV    │ -> │ 01_bronze  (ingestão raw)               │ -> │ 02_silver (DQ + transfo) │ -> 03_gold (Market Share)
-│ dim_loja          │    │ bronze.dim_calendario     (91)           │    │ silver.dim_calendario    │    gold.fact_market_share_enriched
-│ dim_produto       │    │ bronze.dim_loja          (2500)          │    │ silver.dim_loja          │    gold.market_share_by_product
-│ dim_calendario    │    │ bronze.dim_produto       (1235)          │    │ silver.dim_produto       │    gold.market_share_by_brand
-│ fact_ms_provider_a│    │ bronze.fact_ms_provider_a (68526)       │    │ silver.fact_ms_a         │    gold.market_share_by_category
-│ fact_ms_provider_b│    │ bronze.fact_ms_provider_b (58526)       │    │ silver.fact_ms_b         │    gold.market_share_by_store
-│ coverage_provider │    │ bronze.coverage_provider  (6370)        │    │ silver.fact_consolidated │    gold.market_share_by_retailer
-│ territory_history │    │ bronze.territory_history  (4736)        │    │ silver.coverage_provider │    gold.market_share_by_territory
-│ sensitive_contacts │    │ bronze.sensitive_contacts (400)         │    │ silver.territory_history │    gold.market_share_by_channel
-└──────────────────┘    └──────────────────────────────────────────┘    │ silver.sensitive_contacts│    gold.coverage_metrics
-                                                                         │ silver.dq_results         │    gold.dq_monitoring
-                                                                         │ quarantine.*_issues       │
-                                                                         └──────────────────────────────────────────┘
-```
 
-### Camadas
+### Fluxo operacional (Databricks Jobs)
 
-| Camada | Notebook | Responsabilidade |
-|---|---|---|
-| Bronze | `01_bronze` | Ingestão de 8 CSVs para tabelas Delta no catálogo `dataquality_challenge.bronze` |
-| Silver | `02_silver` | Validação DQ (54 regras), tratamento automático, quarentena, UNION, cobertura, território, dados sensíveis |
-| Gold | `03_gold` | Fato enriquecida com JOINs, 7 agregações de Market Share (GroupBy + Window), métricas de cobertura, monitoramento DQ |
+1. **`01_bronze`**: ingere os 8 CSVs para `dataquality_challenge.bronze.*`
+2. **`02_silver`**: aplica DQ, tratamento automático seguro, quarentena e consolidação
+3. **`03_gold`**: gera fato enriquecida, agregações de Market Share, cobertura e monitoramento
+4. **`04_dashboards`** *(opcional)*: materializa visualizações para análise executiva
+
+> Observação: todos os notebooks são idempotentes via `CREATE OR REPLACE TABLE`.
 
 ## 3. Estrutura do projeto
 
