@@ -125,6 +125,12 @@ data-quality-challenge/
 │   ├── 02_silver                      # DQ + transformação silver
 │   ├── 03_gold                        # Market Share data product
 │   └── 04_dashboards                  # queries PySpark + visualizações matplotlib
+├── notebooks/outputs/                    # exports HTML das execuções dos notebooks
+│   ├── 01_bronze
+│   ├── 02_silver
+│   ├── 03_gold
+│   ├── 04_dashboards
+│   └── manifest.mf
 ├── dashboards/
 │   ├── dashboard.md                   # documento markdown com as visualizações
 │   ├── market_share_by_brand.png
@@ -675,3 +681,33 @@ As visualizações são geradas pelo notebook `04_dashboards` usando PySpark (co
 6. **Dados sensíveis mascarados mas não governanceados:** O mascaramento é determinístico, mas não há controle de acesso baseado em coluna (column masking do Unity Catalog).
 7. **Sem processamento incremental:** A pipeline é batch (`CREATE OR REPLACE TABLE`). Para volumes maiores, processamento incremental com Auto Loader seria necessário.
 8. **Sem alertas automatizados:** A tabela `dq_monitoring` existe mas não dispara alertas. Recomenda-se configurar SQL Alerts ou Databricks SQL Alerts.
+
+---
+
+## 18. Outputs de execução (HTML) e limitação da integração Databricks ↔ GitHub
+
+A pasta `notebooks/outputs/` contém exports em formato HTML de cada notebook executado (`01_bronze`, `02_silver`, `03_gold`, `04_dashboards`), junto com um arquivo `manifest.mf`. Estes exports servem como **evidência das execuções** — eles preservam tabelas, gráficos e saídas de console geradas durante o processamento.
+
+### Por que os exports HTML são necessários
+
+A integração nativa entre **Databricks e GitHub** sincroniza apenas o **código-fonte** das células dos notebooks (arquivos `.ipynb`), mas **bloqueia os outputs** — resultados de execução, tabelas, gráficos e logs não são versionados no repositório Git. Isso significa que:
+
+- O código dos notebooks é versionado normalmente via Git (apenas o conteúdo das células)
+- Os **outputs** (resultado de `display()`, `print()`, gráficos matplotlib, tabelas Spark) são removidos durante a sincronização
+- Para preservar a evidência das execuções, é necessário exportar manualmente cada notebook como HTML e armazená-lo na pasta `notebooks/outputs/`
+
+### Conteúdo da pasta
+
+| Arquivo | Conteúdo |
+|---|---|
+| `01_bronze` | Output da ingestão dos 8 CSVs para tabelas Delta bronze |
+| `02_silver` | Output da validação DQ, tratamento, quarentena, UNION e validação silver |
+| `03_gold` | Output dos JOINs, agregações de Market Share, cobertura e monitoramento DQ |
+| `04_dashboards` | Output das queries PySpark e visualizações matplotlib |
+| `manifest.mf` | Manifesto com metadados dos exports |
+
+### Como regenerar os exports
+
+1. Executar cada notebook no Databricks (`01_bronze` → `02_silver` → `03_gold` → `04_dashboards`)
+2. No menu do notebook, selecionar **File → Export → HTML**
+3. Salvar o arquivo HTML na pasta `notebooks/outputs/`
