@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Quality Challenge • Outputs</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #121a33;
+      --text: #e8ecff;
+      --muted: #aab4d6;
+      --accent: #7aa2ff;
+      --accent-2: #9bdbff;
+      --border: #26335f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #0b1020 0%, #0d1430 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+      letter-spacing: 0.2px;
+    }
+
+    p.subtitle {
+      margin: 0 0 24px;
+      color: var(--muted);
+    }
+
+    .card {
+      background: rgba(18, 26, 51, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      backdrop-filter: blur(4px);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    a.report {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      transition: 0.2s ease;
+      background: #101831;
+    }
+
+    a.report:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(122, 162, 255, 0.2);
+    }
+
+    .name {
+      font-weight: 600;
+    }
+
+    .hint {
+      color: var(--accent-2);
+      font-size: 0.92rem;
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    code {
+      background: #0b1330;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 6px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>📊 Notebook Outputs</h1>
+    <p class="subtitle">Relatórios HTML publicados no GitHub Pages</p>
+
+    <section class="card">
+      <ul>
+        <li>
+          <a class="report" href="./01_bronze.html">
+            <span class="name">01_bronze.html</span>
+            <span class="hint">abrir relatório →</span>
+          </a>
+        </li>
+
+        <!-- Adicione novos arquivos aqui seguindo o mesmo padrão -->
+        <!--
+        <li>
+          <a class="report" href="./02_silver.html">
+            <span class="name">02_silver.html</span>
+            <span class="hint">abrir relatório →</span>
+          </a>
+        </li>
+        -->
+      </ul>
+    </section>
+
+    <p class="footer">
+      URL desta página:
+      <code>/data-quality-challenge/notebooks/outputs/</code>
+    </p>
+  </main>
+</body>
+</html>
