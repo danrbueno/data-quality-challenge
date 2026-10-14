@@ -492,7 +492,7 @@ A priorização segue: regras `critical` > `high` > `medium` > `low`, com regras
 - Mascaramento de dados sensíveis — email e telefone mascarados deterministicamente.
 
 **Exigem análise manual** (`safe_auto_fix = false`, quarentena):
-- Nulos em `state` e `category` — não há valor neutro óbvio; remover da dimensão poderia quebrar RI.
+- Nulos em `state` e `category` — não há valor neutro óbvio; remover da dimensão poderia quebrar a integridade referencial (RI), pois registros da fato podem referenciar esses registros da dimensão.
 - Valores negativos em fatos — não é seguro assumir que deveriam ser zero; podem indicar erro de medição.
 - Órfãos de integridade referencial — o registro correto exige saber se o problema está na fato ou na dimensão.
 - Strings vazias em campos críticos (`store_id`, `product_id`) — não é possível inferir o valor correto.
@@ -545,11 +545,9 @@ A tabela `gold.coverage_metrics` quantifica a taxa de cobertura por provider × 
 1. **Acurácia não validada:** Não há fonte de verdade externa para comparar os valores de `sales_value_brl`. Market Share pode estar correto internamente mas não refletir o mercado real.
 2. **Temporalidade não monitorada:** As datas de entrega em `coverage_provider` não são usadas como regra DQ. Atrasos na entrega não geram alertas automáticos.
 3. **Reconciliação entre providers não implementada:** Para semanas onde ambos os providers reportam o mesmo produto/loja, não há cruzamento para detectar discrepâncias.
-4. **Coordenadas geográficas removidas:** A validação de coordenadas foi removida a pedido. Registros com latitude/longitude invertidas permanecem na silver.
-5. **Market Share sem ponderação de cobertura:** O cálculo atual não pondera pela taxa de cobertura. Semanas com baixa cobertura podem distorcer o Market Share.
-6. **Dados sensíveis mascarados mas não governanceados:** O mascaramento é determinístico, mas não há controle de acesso baseado em coluna (column masking do Unity Catalog).
-7. **Sem processamento incremental:** A pipeline é batch (`CREATE OR REPLACE TABLE`). Para volumes maiores, processamento incremental com Auto Loader seria necessário.
-8. **Sem alertas automatizados:** A tabela `dq_monitoring` existe mas não dispara alertas. Recomenda-se configurar SQL Alerts ou Databricks SQL Alerts.
+4. **Market Share sem ponderação de cobertura:** O cálculo atual não pondera pela taxa de cobertura. Se numa semana apenas 60% das lojas reportaram (`partial_coverage`), o `total_sales_value_brl` da semana é artificialmente baixo, inflando o Market Share % dos produtos/lojas que reportaram. Isso torna comparações entre semanas com coberturas diferentes não confiáveis — uma loja ou produto pode aparentar ganhar participação simplesmente porque seus concorrentes não reportaram dados. A tabela `gold.coverage_metrics` quantifica a taxa de cobertura, mas o cálculo de Market Share não a utiliza como fator de ajuste.
+5. **Sem processamento incremental:** A pipeline é batch (`CREATE OR REPLACE TABLE`). Para volumes maiores, processamento incremental com Auto Loader seria necessário.
+6. **Sem alertas automatizados:** A tabela `dq_monitoring` existe mas não dispara alertas. Recomenda-se configurar SQL Alerts ou Databricks SQL Alerts.
 
 ---
 
