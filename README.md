@@ -673,11 +673,9 @@ As visualizações são geradas pelo notebook `04_dashboards` usando PySpark (co
 1. **Acurácia não validada:** Não há fonte de verdade externa para comparar os valores de `sales_value_brl`. Market Share pode estar correto internamente mas não refletir o mercado real.
 2. **Temporalidade não monitorada:** As datas de entrega em `coverage_provider` não são usadas como regra DQ. Atrasos na entrega não geram alertas automáticos.
 3. **Reconciliação entre providers não implementada:** Para semanas onde ambos os providers reportam o mesmo produto/loja, não há cruzamento para detectar discrepâncias.
-4. **Coordenadas geográficas removidas:** A validação de coordenadas foi removida a pedido. Registros com latitude/longitude invertidas permanecem na silver.
-5. **Market Share sem ponderação de cobertura:** O cálculo atual não pondera pela taxa de cobertura. Semanas com baixa cobertura podem distorcer o Market Share.
-6. **Dados sensíveis mascarados mas não governanceados:** O mascaramento é determinístico, mas não há controle de acesso baseado em coluna (column masking do Unity Catalog).
-7. **Sem processamento incremental:** A pipeline é batch (`CREATE OR REPLACE TABLE`). Para volumes maiores, processamento incremental com Auto Loader seria necessário.
-8. **Sem alertas automatizados:** A tabela `dq_monitoring` existe mas não dispara alertas. Recomenda-se configurar SQL Alerts ou Databricks SQL Alerts.
+4. **Market Share sem ponderação de cobertura:** O cálculo atual não pondera pela taxa de cobertura. Semanas com baixa cobertura podem distorcer o Market Share.
+5. **Sem processamento incremental:** A pipeline é batch (`CREATE OR REPLACE TABLE`). Para volumes maiores, processamento incremental com Auto Loader seria necessário.
+6. **Sem alertas automatizados:** A tabela `dq_monitoring` existe mas não dispara alertas. Recomenda-se configurar SQL Alerts ou Databricks SQL Alerts.
 
 ---
 
